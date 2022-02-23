@@ -1,0 +1,46 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+
+        
+            "StorageAccName":{
+                                "value":"strgdec2021"
+    
+                             },
+            "VirtualNetwork":{
+                                "value":"MyVnet"
+    
+                             },
+            "Subnet1":{
+                                "value":"Sub1"
+    
+                             },
+            "vmList":{
+                                 "value": "windowsVM2"
+
+                            },
+            "domainFQDN":{
+                                "value": "ramroyals.com"
+
+                           },
+            "domainJoinUserName":{
+                                "value": "raman"
+            },
+            "domainJoinUserPassword":{
+                                 "value": "Azure123azure"
+            },
+            "existingRecoveryServicesVault":{
+                                  "value": "test-RSV"
+
+            } ,
+            "existingVirtualMachines":{
+                                   "value": "windowsVM2"                            
+            
+    },
+           "existingVirtualMachinesResourceGroup":{
+              "value": "incubation-RG"
+                                  
+    }
+}
+}

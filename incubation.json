@@ -1,0 +1,272 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "StorageAccName": {
+            "type": "string",
+            "minLength":3,
+            "maxLength":15
+        },
+        "VirtualNetwork": {
+            "type": "string",
+            "minLength":3,
+            "maxLength":15
+        } ,
+        "Subnet1": {
+            "type": "string",
+            "minLength":3,
+            "maxLength":15
+        }
+    },
+    "functions": [],
+    "variables": {},
+    "resources": [
+    {
+            "name": "[parameters('StorageAccName')]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2021-04-01",
+            "tags": {
+                "displayName": "storageaccount1"
+                    },
+            "location": "[resourceGroup().location]",
+            "kind": "StorageV2",
+            "sku": {
+                "name": "Standard_GRS",
+                "tier": "Standard"
+                    }
+    },
+
+     {
+            "name": "[parameters('VirtualNetwork')]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+                        "tags": {
+                "displayName": "windowsVM1-VirtualNetwork"
+            },
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.0.0.0/16"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[parameters('Subnet1')]",
+                        "properties": {
+                            "addressPrefix": "10.0.0.0/24"
+                            
+                            }                     
+                        
+                    }
+                ]
+            }
+        },
+
+    
+
+        {
+            "name": "VM1-PublicIP",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "PublicIPAddress"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic"
+                
+            }
+        },
+    
+
+         {
+            "name": "VM2-PublicIP",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "PublicIPAddress"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic"
+                
+            }
+        },
+    
+     
+             
+        {
+            "name": "windowsVM1-NetworkInterface",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', 'VM1-PublicIP')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('VirtualNetwork'))]"
+            ],
+            "tags": {
+                "displayName": "windowsVM1 Network Interface"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipConfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'VM1-PublicIP')]"
+                            },
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('VirtualNetwork'), parameters('Subnet1'))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        
+        {
+            "name": "windowsVM2-NetworkInterface",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', 'VM2-PublicIP')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('VirtualNetwork'))]"
+            ],
+            "tags": {
+                "displayName": "windowsVM2 Network Interface"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipConfig2",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'VM2-PublicIP')]"
+                            },
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('VirtualNetwork'), parameters('Subnet1'))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+    
+     
+        {
+            "name": "windowsVM1",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2021-03-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts',parameters('StorageAccName'))]",
+                "[resourceId('Microsoft.Network/networkInterfaces', 'windowsVM1-NetworkInterface')]"
+            ],
+            "tags": {
+                "displayName": "windowsVM1"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_D2s_v3"
+                },
+                "osProfile": {
+                    "computerName": "windowsVM1",
+                    "adminUsername": "raman",
+                    "adminPassword": "Azure123azure"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2016-datacenter-gensecond",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "windowsVM1OSDisk",
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', 'windowsVM1-NetworkInterface')]"
+                        }
+                    ]
+                }
+                
+            }
+        },
+
+      
+
+        {
+            "name": "windowsVM2",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2021-03-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts',parameters('StorageAccName'))]",
+                "[resourceId('Microsoft.Network/networkInterfaces', 'windowsVM2-NetworkInterface')]"
+            ],
+            "tags": {
+                "displayName": "windowsVM2"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_D2s_v3"
+                },
+                "osProfile": {
+                    "computerName": "windowsVM1",
+                    "adminUsername": "raman",
+                    "adminPassword": "Azure123azure"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2016-datacenter-gensecond",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "windowsVM2OSDisk",
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', 'windowsVM2-NetworkInterface')]"
+                        }
+                    ]
+                }
+                
+            }
+        },
+        
+       
+        {
+            "name": "test-RSV",
+            "type": "Microsoft.RecoveryServices/vaults",
+            "apiVersion": "2021-03-01",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "RS0",
+                "tier": "Standard"
+            },
+            "properties": {}
+        }
+     
+     
+       
+
+
+     
+    ],
+    "outputs": {}
+}
